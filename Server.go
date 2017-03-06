@@ -128,17 +128,11 @@ func (server *Server) generateShadow(req *Request, primary bool) (shadow *Shadow
 			ok = false
 		}
 	case INTEREST:
-		if primary {
-			delta := server.bank.GetAccount(req.Aid).ComputeInterest()
-			shadow.Amount = delta
-			shadow.Color = BLUE
-			res = &Response{Status: 0, Balance: balance + delta}
-			ok = true
-
-			shadow.Color = RED
-		} else {
-			ok = false
-		}
+		delta := server.bank.GetAccount(req.Aid).ComputeInterest()
+		shadow.Amount = delta
+		shadow.Color = BLUE
+		res = &Response{Status: 0, Balance: balance + delta}
+		ok = true
 	default:
 		panic("Unknown operation")
 	}
@@ -171,6 +165,7 @@ func (server *Server) doRequest(reqItem *requestItem) bool {
 func (server *Server) dispatchShadowOp(shadow *ShadowOp) {
 	shadow.apply(server.bank)
 	server.now.Tick(shadow.ServerId, shadow.Color)
+	server.now.Print(server.id)
 	if server.now.Red() > server.maxR {
 		server.maxR = server.now.Red()
 	}
@@ -192,7 +187,6 @@ func (server *Server) mainLoop() {
 		select {
 		// send or receive token
 		case maxR := <-server.tokenChan:
-			server.now.Print(server.id)
 			if server.hasToken {
 				server.hasToken = false
 				nextId := (server.id + 1) % len(server.peers)
@@ -219,6 +213,7 @@ func (server *Server) mainLoop() {
 				if shadow.Depend.Ready(server.now) {
 					shadow.apply(server.bank)
 					server.now.Tick(shadow.ServerId, shadow.Color)
+					server.now.Print(server.id)
 					if server.now.Red() > server.maxR {
 						server.maxR = server.now.Red()
 					}

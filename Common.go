@@ -1,5 +1,7 @@
 package ads_demo
 
+import "fmt"
+
 type REQ int
 
 const INTEREST_RATE = 0.04
@@ -21,4 +23,12 @@ type Response struct {
 	Status  int
 	Balance float64
 	Message string
+}
+
+func (res Response) Print() {
+	fmt.Printf("status %d, balance %.2f", res.Status, res.Balance)
+	if res.Message != "" {
+		fmt.Printf(", message: %s", res.Message)
+	}
+	fmt.Printf("\n")
 }
